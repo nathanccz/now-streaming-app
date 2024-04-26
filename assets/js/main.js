@@ -168,7 +168,7 @@
 
 		})();
 
-})();
+})()
 
 
 
@@ -183,28 +183,42 @@ async function getResults() {
 	let formData = new FormData(submitForm)
 	const userInput = Object.fromEntries(formData).title.split(' ').join('%20')
 
-	const titleRequestURL = `https://api.watchmode.com/v1/search/?apiKey=${API_KEY}&search_field=name&search_value=${userInput}`
-	const titleRequest = await fetch(titleRequestURL)
-	const titleRequestData = await titleRequest.json()
+	const titleSearchURL = `https://api.watchmode.com/v1/search/?apiKey=${API_KEY}&search_field=name&search_value=${userInput}`
+	const titleSearchResponse = await fetch(titleSearchURL)
+	const titleSearchData = await titleSearchResponse.json()
 
-	const [titleID, titleYear, titleName] = [titleRequestData["title_results"][0].id, 
-											 titleRequestData["title_results"][0].year,
-											 titleRequestData["title_results"][0].name] 
+	const [titleID, titleYear, titleName] = [titleSearchData.title_results[0].id, 
+											 titleSearchData.title_results[0].year,
+											 titleSearchData.title_results[0].name] 
 
 	const titleDetailsURL = `https://api.watchmode.com/v1/title/${titleID}/details/?apiKey=${API_KEY}`
-	const titleDetailsRequest = await fetch(titleDetailsURL)
-	const titleDetailsData = await titleDetailsRequest.json()
+	const titleDetailsResponse = await fetch(titleDetailsURL)
+	const titleDetailsData = await titleDetailsResponse.json()
 
-	const [titlePlot, titleScore, titlePoster, similarTitles] = [titleDetailsData["plot_overview"],
-																 titleDetailsData["critic_score"],
-																 titleDetailsData["poster"],
-																 titleDetailsData["similar_titles"]]
+	const [titlePlot, titleScore, titlePoster, similarTitles] = [titleDetailsData.plot_overview,
+																 titleDetailsData.critic_score,
+																 titleDetailsData.poster,
+																 titleDetailsData.similar_titles]
 																 
 	const titleSourcesURL = `https://api.watchmode.com/v1/title/${titleID}/sources/?apiKey=${API_KEY}`
-	const titleSourcesRequest = await fetch(titleSourcesURL)
-	const titleSourcesData = await titleSourcesRequest.json()
+	const titleSourcesResponse = await fetch(titleSourcesURL)
+	const titleSourcesData = await titleSourcesResponse.json()
 	const subsOnly = titleSourcesData.filter(titleSrc => titleSrc.type === 'sub')
 
-	if (subsOnly.length === 0) alert('Title not available for free or via streaming subscriptions. Please try again.')
+}
+
+// document.querySelector('h1').addEventListener('click', getRecentTitles)
+
+async function getRecentTitles() {
+
+	const recentTitlesURL = `https://api.watchmode.com/v1/releases/?apiKey=${API_KEY}`
+	const recentTitlesResponse = await fetch(recentTitlesURL)
+	const recentTitlesData = await recentTitlesResponse.json()
+
+	let today = new Date
+	const newlyReleased = recentTitlesData.releases.filter(entry => new Date(entry.source_release_date) <= today)
+
+	const [recentMovies, recentShows] = [newlyReleased.filter(entry => entry.type === 'movie'),
+								         newlyReleased.filter(entry => entry.tmdb_type === 'tv')]
 
 }
