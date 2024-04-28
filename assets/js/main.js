@@ -159,7 +159,7 @@
 								$submit.disabled = false;
 
 							// Show message.
-								$message._show('success', 'Thank you!');
+								$message._show('success', 'Searching...');
 								//$message._show('failure', 'Something went wrong. Please try again.');
 
 						}, 750);
@@ -171,7 +171,12 @@
 })()
 
 
+document.querySelector('.exit-button').addEventListener('click', closePopup) 
 
+function closePopup() {
+	document.querySelector('.popup-box').style.display = 'none'
+	// window.location.reload()
+}
 
 
 const API_KEY = 'WWyjTKaFm0siAsO2LHjVa6rPLpOifNLPYPQYXVia'
@@ -180,34 +185,67 @@ submitForm.addEventListener('submit', getResults)
 
 async function getResults() {
 
+	////Grab form submission data and use it to fetch Watchmode API. If form field is blank, hard return////
 	let formData = new FormData(submitForm)
 	const userInput = Object.fromEntries(formData).title.split(' ').join('%20')
+	if (!userInput) return
 
+	////Fetch title ID, year, and name then plug into popup h1////
 	const titleSearchURL = `https://api.watchmode.com/v1/search/?apiKey=${API_KEY}&search_field=name&search_value=${userInput}`
 	const titleSearchResponse = await fetch(titleSearchURL)
 	const titleSearchData = await titleSearchResponse.json()
+	console.log(titleSearchData)
 
-	const [titleID, titleYear, titleName] = [titleSearchData.title_results[0].id, 
-											 titleSearchData.title_results[0].year,
-											 titleSearchData.title_results[0].name] 
+	const [titleID, titleYear, titleName] = 
+	
+		[titleSearchData.title_results[0].id, titleSearchData.title_results[0].year, titleSearchData.title_results[0].name]
+	
+	document.getElementById('results-title').textContent = `${titleName} (${titleYear})`
 
-	const titleDetailsURL = `https://api.watchmode.com/v1/title/${titleID}/details/?apiKey=${API_KEY}`
+
+	////Fetch title details and plug into popup////
+	const titleDetailsURL = `https://api.watchmode.com/v1/title/${titleID}/details/?apiKey=${API_KEY}&append_to_response=sources`
 	const titleDetailsResponse = await fetch(titleDetailsURL)
 	const titleDetailsData = await titleDetailsResponse.json()
+	console.log(titleDetailsData)
 
-	const [titlePlot, titleScore, titlePoster, similarTitles] = [titleDetailsData.plot_overview,
-																 titleDetailsData.critic_score,
-																 titleDetailsData.poster,
-																 titleDetailsData.similar_titles]
-																 
-	const titleSourcesURL = `https://api.watchmode.com/v1/title/${titleID}/sources/?apiKey=${API_KEY}`
-	const titleSourcesResponse = await fetch(titleSourcesURL)
-	const titleSourcesData = await titleSourcesResponse.json()
-	const subsOnly = titleSourcesData.filter(titleSrc => titleSrc.type === 'sub')
+	const [titlePlot, titleScore, titlePoster, similarTitles, titleSources, trailerLink] = 
+	
+		[titleDetailsData.plot_overview, titleDetailsData.critic_score, titleDetailsData.poster, 
+		 titleDetailsData.similar_titles, titleDetailsData.sources, titleDetailsData.trailer]
+	
+	const trailerID = trailerLink.split('=')[1]																					
+	
+	console.log(titleSources)																		   
+	const subOrFree = titleSources.filter(entry => entry.type === 'sub' || entry.type === 'free')
+	console.log(subOrFree)
+	
+	document.getElementById('poster').src = titlePoster
+	document.getElementById('plot-overview').textContent = titlePlot
+	document.getElementById('title-trailer').src = `https://www.youtube.com/embed/${trailerID}`
 
+
+	////Fetch top four actors and plug headshot and name/role into popup////
+	const titleCastURL = `https://api.watchmode.com/v1/title/${titleID}/cast-crew/?apiKey=${API_KEY}`
+	const titleCastResponse = await fetch(titleCastURL)
+	const titleCastData = await titleCastResponse.json()
+	
+	const titleCastAll = titleCastData.filter(entry => entry.type === 'Cast')
+	const topFiveCast = titleCastAll.filter((_, ind) => ind < 5)
+	console.log(titleCastAll)
+
+	topFiveCast.forEach((entry,ind) => {
+		const headshot = document.getElementById(`headshot-${String(ind + 1)}`)
+		headshot.src = entry.headshot_url
+	})
+	
+
+
+	////Set popup display to 'block'  on last line so that the API fetches have more time to resolve/populate before popup appears.//// 
+	document.querySelector('.popup-box').style.display = "block"			 
 }
 
-// document.querySelector('h1').addEventListener('click', getRecentTitles)
+// If user doesn't find shows available for free, or they're unavailable on their preferred services, fetch recommendations. 
 
 async function getRecentTitles() {
 

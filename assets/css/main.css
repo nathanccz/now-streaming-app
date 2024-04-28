@@ -479,9 +479,9 @@ form {
       transform: scale(1);
       opacity: 1; }
     form .message.success {
-      color: #1cb495; }
+      color: #ffffff; }
       form .message.success:before {
-        content: '\f00c'; }
+        content: '\f002'; }
     form .message.failure {
       color: #ff2361; }
       form .message.failure:before {
@@ -833,6 +833,102 @@ button,
         line-height: inherit;
         margin-top: 0;
         position: absolute; } }
+
+/* Pop-up Box */
+
+
+
+.popup-box {
+  display: none;
+  position: absolute;
+  top: 8%;
+  right: 20%;
+  padding: 4rem;
+  max-width: 60%;
+  border-radius: .55rem;
+  background-color: rgba(27, 31, 34);
+  margin-bottom: 15rem;
+}
+
+.poster-trailer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.poster-trailer img {
+  width: 185px;
+  height: 278px;
+}
+
+.popup-box iframe {
+  flex-basis: 65%
+}
+
+@media screen and (max-width: 1000px) {
+  .poster-trailer {
+    flex-direction: column;
+  }
+  .poster-trailer * {
+    margin: 0 auto
+  }
+  .cast-list {
+    flex-wrap: wrap;
+  }
+}
+
+.popup-box * {
+  color: white
+}
+
+.exit-button:before {
+    -moz-transition: background-color 0.2s ease-in-out;
+    -webkit-transition: background-color 0.2s ease-in-out;
+    -ms-transition: background-color 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 100%;
+    background-position: center;
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' width='20px' height='20px' viewBox='0 0 20 20' zoomAndPan='disable'%3E%3Cstyle%3Eline %7B stroke: %23ffffff%3B stroke-width: 1%3B %7D%3C/style%3E%3Cline x1='2' y1='2' x2='18' y2='18' /%3E%3Cline x1='18' y1='2' x2='2' y2='18' /%3E%3C/svg%3E");
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+    margin-left: 93%;
+}
+
+.exit-button:hover:before {
+  background-color: rgba(255, 255, 255, 0.075);
+}
+
+.exit-button:active:before {
+  background-color: rgba(255, 255, 255, 0.175);
+}
+
+.cast-list {
+  display: flex;
+  list-style: none;
+  flex-direction: row;
+  width: 100%;
+  padding-left: 0;
+}
+
+.cast-list li {
+  flex: 1
+}
+
+.cast-list img {
+  width: 100%; /* or any custom size */
+  height: 100%; 
+  object-fit: contain;
+}
+
 
 /* Footer */
 #footer {
