@@ -279,15 +279,24 @@ async function getResults() {
 
 
 	////Fetch top four actors and plug headshot and name/role into popup////
-	const titleCastURL = `https://api.watchmode.com/v1/title/${titleID}/cast-crew/?apiKey=${API_KEY}`
-	const titleCastResponse = await fetch(titleCastURL)
-	const titleCastData = await titleCastResponse.json()
+	const titleCastAndCrewURL = `https://api.watchmode.com/v1/title/${titleID}/cast-crew/?apiKey=${API_KEY}`
+	const titleCastAndCrewResponse = await fetch(titleCastAndCrewURL)
+	const titleCastAndCrewData = await titleCastAndCrewResponse.json()
+	console.log(titleCastAndCrewData)
+	const titleDirector = titleCastAndCrewData.filter(entry => entry.role === 'Director' || (entry.role.includes('Director,') && !entry.role.includes('Director of') && !entry.role.includes('Assistant') && !entry.role.includes('Art Director')) || (entry.role.split('').slice(-10).join('') === ', Director'))
+
+	console.log(titleDirector)
+	if (titleDetailsData.type === 'movie') {
+		document.getElementById('director').textContent = `dir. ${titleDirector.length === 1 ? titleDirector[0].full_name : `${titleDirector[0].full_name} & ${titleDirector[1].full_name}`}`
+		document.getElementById('director').style.display = 'block'
+	}
 	
-	const titleCastAll = titleCastData.filter(entry => entry.type === 'Cast')
-	const topFiveCast = titleCastAll.filter((_, ind) => ind < 10)
+	
+	const titleCastAll = titleCastAndCrewData.filter(entry => entry.type === 'Cast')
+	const topCast = titleCastAll.filter((_, ind) => ind < 10)
 	console.log(titleCastAll)
 
-	topFiveCast.forEach((entry,ind) => {
+	topCast.forEach((entry,ind) => {
 		const headshot = document.getElementById(`headshot-${String(ind + 1)}`)
 		const name = document.getElementById(`name-${String(ind + 1)}`)
 		const role = document.getElementById(`role-${String(ind + 1)}`)
