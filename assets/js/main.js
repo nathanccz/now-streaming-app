@@ -175,11 +175,11 @@ document.querySelector('.exit-button').addEventListener('click', closePopup)
 
 function closePopup() {
 	document.querySelector('.popup-box').style.display = 'none'
-	// window.location.reload()
+	window.location.reload()
 }
 
 
-const API_KEY = 'WWyjTKaFm0siAsO2LHjVa6rPLpOifNLPYPQYXVia'
+const API_KEY = 'H2saLikjgqyggPxWdtx8hw0bMYhiHBVJ0rmh7Snl'
 const submitForm = document.getElementById('signup-form')
 submitForm.addEventListener('submit', getResults)
 
@@ -194,7 +194,7 @@ async function getResults() {
 	const titleSearchURL = `https://api.watchmode.com/v1/search/?apiKey=${API_KEY}&search_field=name&search_value=${userInput}`
 	const titleSearchResponse = await fetch(titleSearchURL)
 	const titleSearchData = await titleSearchResponse.json()
-	console.log(titleSearchData)
+	// console.log(titleSearchData)
 
 	const [titleID, titleYear, titleName] = 
 	
@@ -204,25 +204,78 @@ async function getResults() {
 
 
 	////Fetch title details and plug into popup////
-	const titleDetailsURL = `https://api.watchmode.com/v1/title/${titleID}/details/?apiKey=${API_KEY}&append_to_response=sources`
+	const titleDetailsURL = `https://api.watchmode.com/v1/title/${titleID}/details/?apiKey=${API_KEY}`
 	const titleDetailsResponse = await fetch(titleDetailsURL)
 	const titleDetailsData = await titleDetailsResponse.json()
-	console.log(titleDetailsData)
+	// console.log(titleDetailsData)
 
-	const [titlePlot, titleScore, titlePoster, similarTitles, titleSources, trailerLink] = 
+	const [titlePlot, titleScore, titlePoster, similarTitles, trailerLink] = 
 	
 		[titleDetailsData.plot_overview, titleDetailsData.critic_score, titleDetailsData.poster, 
-		 titleDetailsData.similar_titles, titleDetailsData.sources, titleDetailsData.trailer]
+		 titleDetailsData.similar_titles, titleDetailsData.trailer]
 	
 	const trailerID = trailerLink.split('=')[1]																					
 	
-	console.log(titleSources)																		   
-	const subOrFree = titleSources.filter(entry => entry.type === 'sub' || entry.type === 'free')
-	console.log(subOrFree)
 	
 	document.getElementById('poster').src = titlePoster
 	document.getElementById('plot-overview').textContent = titlePlot
 	document.getElementById('title-trailer').src = `https://www.youtube.com/embed/${trailerID}`
+
+
+	//Streaming sources
+	const titleSourcesURL = `https://api.watchmode.com/v1/title/${titleID}/sources/?apiKey=${API_KEY}`
+	const titleSourcesResponse = await fetch(titleSourcesURL)	
+	const titleSourcesData = await titleSourcesResponse.json()	
+	// console.log(titleSourcesData)
+	const subOrFree = titleSourcesData.filter(entry => entry.type === 'sub' || entry.type === 'free')
+	console.log(subOrFree)
+
+	if (subOrFree.length === 0) {
+		document.querySelector('.title-unavailable').style.display = 'block'
+		
+		// similarTitles.filter((_, ind) => ind < 5)
+		// similarTitles.forEach(entry => {
+		// 	const newList = document.createElement('li')
+		// 	newList.textContent = entry.title
+
+		// 	document.querySelector('.title-unavailable').appendChild(newList)
+		// })
+	}
+	
+	const streamSourcesURL = `https://api.watchmode.com/v1/sources/?apiKey=${API_KEY}`
+	const streamSourcesResponse = await fetch(streamSourcesURL)
+	const streamSourcesData = await streamSourcesResponse.json()
+	console.log(streamSourcesData)
+
+	//Add new li element for each entry in the subOrFree array		
+	subOrFree.forEach((entry, ind) => {
+
+		const li = document.createElement('li')
+		li.classList.add(`streaming-service-${ind + 1}`)
+
+		const logo = document.createElement('img')
+		logo.classList.add(`stream-logo${ind + 1}`)
+		logo.src = streamSourcesData.find(streamSrc => streamSrc.id === entry.source_id).logo_100px
+
+		const playButton = document.createElement('img')
+		playButton.classList.add('play-button')
+		playButton.src = 'https://img.icons8.com/color/48/next.png'
+
+		const span = document.createElement('span')
+		span.textContent = `${entry.name} (${entry.type === 'sub' ? 'subscription' : 'free'})`
+
+		const playURL = document.createElement('a')
+		playURL.classList.add(`playlink-${ind + 1}`)
+		playURL.href = entry.web_url
+		playURL.target ='_blank'
+
+		document.querySelector('.stream-sources').appendChild(li)
+		document.querySelector(`.streaming-service-${ind + 1}`).appendChild(logo)
+		document.querySelector(`.streaming-service-${ind + 1}`).appendChild(span)
+		document.querySelector(`.streaming-service-${ind + 1}`).appendChild(playURL)
+		document.querySelector(`.playlink-${ind + 1}`).appendChild(playButton)
+
+	})
 
 
 	////Fetch top four actors and plug headshot and name/role into popup////
@@ -231,32 +284,45 @@ async function getResults() {
 	const titleCastData = await titleCastResponse.json()
 	
 	const titleCastAll = titleCastData.filter(entry => entry.type === 'Cast')
-	const topFiveCast = titleCastAll.filter((_, ind) => ind < 5)
+	const topFiveCast = titleCastAll.filter((_, ind) => ind < 10)
 	console.log(titleCastAll)
 
 	topFiveCast.forEach((entry,ind) => {
 		const headshot = document.getElementById(`headshot-${String(ind + 1)}`)
+		const name = document.getElementById(`name-${String(ind + 1)}`)
+		const role = document.getElementById(`role-${String(ind + 1)}`)
 		headshot.src = entry.headshot_url
+		name.textContent = entry.full_name
+		role.textContent = entry.role
 	})
 	
 
 
-	////Set popup display to 'block'  on last line so that the API fetches have more time to resolve/populate before popup appears.//// 
+	////Set popup display to 'block'  on last line so that the data fetches have more time to resolve/populate before popup appears.//// 
 	document.querySelector('.popup-box').style.display = "block"			 
 }
 
 // If user doesn't find shows available for free, or they're unavailable on their preferred services, fetch recommendations. 
 
-async function getRecentTitles() {
+// async function getRecentTitles() {
 
-	const recentTitlesURL = `https://api.watchmode.com/v1/releases/?apiKey=${API_KEY}`
-	const recentTitlesResponse = await fetch(recentTitlesURL)
-	const recentTitlesData = await recentTitlesResponse.json()
+// 	const recentTitlesURL = `https://api.watchmode.com/v1/releases/?apiKey=${API_KEY}`
+// 	const recentTitlesResponse = await fetch(recentTitlesURL)
+// 	const recentTitlesData = await recentTitlesResponse.json()
 
-	let today = new Date
-	const newlyReleased = recentTitlesData.releases.filter(entry => new Date(entry.source_release_date) <= today)
+// 	let today = new Date
+// 	const newlyReleased = recentTitlesData.releases.filter(entry => new Date(entry.source_release_date) <= today)
 
-	const [recentMovies, recentShows] = [newlyReleased.filter(entry => entry.type === 'movie'),
-								         newlyReleased.filter(entry => entry.tmdb_type === 'tv')]
+// 	const [recentMovies, recentShows] = [newlyReleased.filter(entry => entry.type === 'movie'),
+// 								         newlyReleased.filter(entry => entry.tmdb_type === 'tv')]
 
-}
+// 	console.log(recentMovies)
+// 	recentMovies.forEach((entry, ind) => {
+// 		const newList = document.createElement('li')
+// 		newList.textContent = entry.title
+
+// 		document.querySelector('.title-unavailable').appendChild(newList)
+// 	})
+	
+	
+// }
