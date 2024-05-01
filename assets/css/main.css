@@ -916,6 +916,11 @@ button,
     max-width: 980px;
     margin: 0 auto;
   }
+
+  .container.stream-sources span {
+    padding-top: 1%;
+    font-size: 1rem;
+  }
 }
 
 .popup-box h1 {
@@ -986,6 +991,11 @@ button,
   .trailer {
     flex-basis: 65%;
   }
+
+  .container.stream-sources span {
+    padding-top: 1%;
+    font-size: 1rem;
+  }
 }
 
 .poster-trailer div {
@@ -1040,7 +1050,7 @@ span[id|='name'] {
 }
 
 .stream-sources span {
-  padding-top: 1%;
+  padding-top: 1.5%;
   font-size: .75rem;
 }
 
