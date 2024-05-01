@@ -173,36 +173,41 @@
 
 const API_KEY = 'H2saLikjgqyggPxWdtx8hw0bMYhiHBVJ0rmh7Snl'
 
-//Autocomplete functionality
+//Form autocomplete functionality
 
 let suggestions
 const autocomplete = document.getElementById("title")
 const resultsHTML = document.getElementById("title-suggestions")
 
 autocomplete.oninput = async function () {
-	const userInput = this.value.split(' ').join('%20');
-	console.log(userInput)
-	resultsHTML.innerHTML = "";
+	const userInput = this.value.split(' ').join('%20')
+	resultsHTML.innerHTML = ""
+
 	if (userInput.length > 3) {
+
 		const suggestionsURL = `https://api.watchmode.com/v1/autocomplete-search/?apiKey=${API_KEY}&search_value=${userInput}&search_type=2`
 		const suggestionsResponse = await fetch(suggestionsURL)
 		const suggestionsData = await suggestionsResponse.json()
-		suggestions = suggestionsData.results.filter((_,i) => i < 5).map(entry => `${entry.name} (${entry.year})`)
-		console.log(suggestions)
-		resultsHTML.style.display = "block";
+
+		suggestions = suggestionsData.results.filter((_,i) => i < 5)
+										     .map(entry => [`${entry.name} (${entry.year}) — <em>${entry.type.split('_').join(' ')}</em`, entry.id])
+											 
+		resultsHTML.style.display = "block"
+
 		for (i = 0; i < suggestions.length; i++) {
-			resultsHTML.innerHTML += "<li>" + suggestions[i] + "</li>";
+			resultsHTML.innerHTML += "<li>" + suggestions[i][0] + "</li>";
 		}
+
 	}
 }
 
 resultsHTML.onclick = function (event) {
-	const setValue = event.target.innerText;
-	autocomplete.value = setValue;
-	this.innerHTML = "";
+	const setValue = event.target.innerText.split('—')[0]
+	autocomplete.value = setValue
+	this.innerHTML = ""
 }
 
-//Popup box functionality
+//Popup box exit functionality
 
 document.querySelector('.exit-button').addEventListener('click', closePopup) 
 
@@ -211,34 +216,18 @@ function closePopup() {
 	window.location.reload()
 }
 
-
+//Popup box content fetches
 
 const submitForm = document.getElementById('signup-form')
 submitForm.addEventListener('submit', getResults)
 
 async function getResults() {
 
-	////Grab form submission data and use it to fetch Watchmode API. If form field is blank, hard return////
+	////Grab form submission data, match it to the suggestions array, and use the title ID it to fetch Watchmode API. If form field is blank, hard return////
 	let formData = new FormData(submitForm)
-	const userInput = Object.fromEntries(formData).title.split(' ').join('%20')
+	const userInput = Object.fromEntries(formData).title
+	const titleID = suggestions.find(entry => entry[0].includes(userInput))[1]
 	if (!userInput) return
-
-	////Fetch title ID, year, and name then plug into popup h1////
-	const titleSearchURL = `https://api.watchmode.com/v1/search/?apiKey=${API_KEY}&search_field=name&search_value=${userInput}`
-	const titleSearchResponse = await fetch(titleSearchURL)
-	const titleSearchData = await titleSearchResponse.json()
-
-	// if (!titleSearchData.title_results[0]) {
-	// 	alert('Title not found. Please try again.') 
-		
-	// }
-	// console.log(titleSearchData)
-
-	const [titleID, titleYear, titleName] = 
-	
-		[titleSearchData.title_results[0].id, titleSearchData.title_results[0].year, titleSearchData.title_results[0].name]
-	
-	document.getElementById('results-title').textContent = `${titleName} (${titleYear})`
 
 
 	////Fetch title details and plug into popup////
@@ -247,10 +236,10 @@ async function getResults() {
 	const titleDetailsData = await titleDetailsResponse.json()
 	// console.log(titleDetailsData)
 
-	const [titlePlot, titleScore, titlePoster, similarTitles, trailerLink] = 
+	const [titlePlot, titleScore, titlePoster, similarTitles, trailerLink, titleName, titleYear] = 
 	
 		[titleDetailsData.plot_overview, titleDetailsData.critic_score, titleDetailsData.poster, 
-		 titleDetailsData.similar_titles, titleDetailsData.trailer]
+		 titleDetailsData.similar_titles, titleDetailsData.trailer, titleDetailsData.title, titleDetailsData.year]
 	
 	const trailerID = trailerLink.split('=')[1]																					
 	
@@ -258,6 +247,7 @@ async function getResults() {
 	document.getElementById('poster').src = titlePoster
 	document.getElementById('plot-overview').textContent = titlePlot
 	document.getElementById('title-trailer').src = `https://www.youtube.com/embed/${trailerID}`
+	document.getElementById('results-title').textContent = `${titleName} (${titleYear})`
 
 
 	//Streaming sources
@@ -346,8 +336,6 @@ async function getResults() {
 		name.textContent = entry.full_name
 		role.textContent = entry.role
 	})
-	
-
 
 	////Set popup display to 'block'  on last line so that the data fetches have more time to resolve/populate before popup appears.//// 
 	document.querySelector('.popup-box').style.display = "block"			 

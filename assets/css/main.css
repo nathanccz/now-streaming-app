@@ -445,7 +445,7 @@ ul.icons {
 
 /* Form */
 form {
-  margin: 0 0 2em 0; }
+  margin: 0 0 1em 0; }
   form .message {
     text-decoration: none;
     -moz-transition: opacity 0.2s ease-in-out, -moz-transform 0.2s ease-in-out;
