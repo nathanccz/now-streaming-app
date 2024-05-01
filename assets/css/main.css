@@ -1046,7 +1046,14 @@ span[id|='name'] {
   display: none;
 }
 
-
+#title-suggestions {
+  list-style: none;
+  padding-left: 0;
+  position: relative;
+  margin-bottom: 0;
+  display: none;
+  line-height: 2rem;
+}
 
 
 /* Footer */

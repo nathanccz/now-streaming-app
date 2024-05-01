@@ -171,6 +171,39 @@
 })()
 
 
+const API_KEY = 'H2saLikjgqyggPxWdtx8hw0bMYhiHBVJ0rmh7Snl'
+
+//Autocomplete functionality
+
+let suggestions
+const autocomplete = document.getElementById("title")
+const resultsHTML = document.getElementById("title-suggestions")
+
+autocomplete.oninput = async function () {
+	const userInput = this.value.split(' ').join('%20');
+	console.log(userInput)
+	resultsHTML.innerHTML = "";
+	if (userInput.length > 3) {
+		const suggestionsURL = `https://api.watchmode.com/v1/autocomplete-search/?apiKey=${API_KEY}&search_value=${userInput}&search_type=2`
+		const suggestionsResponse = await fetch(suggestionsURL)
+		const suggestionsData = await suggestionsResponse.json()
+		suggestions = suggestionsData.results.filter((_,i) => i < 5).map(entry => `${entry.name} (${entry.year})`)
+		console.log(suggestions)
+		resultsHTML.style.display = "block";
+		for (i = 0; i < suggestions.length; i++) {
+			resultsHTML.innerHTML += "<li>" + suggestions[i] + "</li>";
+		}
+	}
+}
+
+resultsHTML.onclick = function (event) {
+	const setValue = event.target.innerText;
+	autocomplete.value = setValue;
+	this.innerHTML = "";
+}
+
+//Popup box functionality
+
 document.querySelector('.exit-button').addEventListener('click', closePopup) 
 
 function closePopup() {
@@ -179,7 +212,7 @@ function closePopup() {
 }
 
 
-const API_KEY = 'H2saLikjgqyggPxWdtx8hw0bMYhiHBVJ0rmh7Snl'
+
 const submitForm = document.getElementById('signup-form')
 submitForm.addEventListener('submit', getResults)
 
@@ -194,6 +227,11 @@ async function getResults() {
 	const titleSearchURL = `https://api.watchmode.com/v1/search/?apiKey=${API_KEY}&search_field=name&search_value=${userInput}`
 	const titleSearchResponse = await fetch(titleSearchURL)
 	const titleSearchData = await titleSearchResponse.json()
+
+	// if (!titleSearchData.title_results[0]) {
+	// 	alert('Title not found. Please try again.') 
+		
+	// }
 	// console.log(titleSearchData)
 
 	const [titleID, titleYear, titleName] = 
@@ -283,12 +321,16 @@ async function getResults() {
 	const titleCastAndCrewResponse = await fetch(titleCastAndCrewURL)
 	const titleCastAndCrewData = await titleCastAndCrewResponse.json()
 	console.log(titleCastAndCrewData)
-	const titleDirector = titleCastAndCrewData.filter(entry => entry.role === 'Director' || (entry.role.includes('Director,') && !entry.role.includes('Director of') && !entry.role.includes('Assistant') && !entry.role.includes('Art Director')) || (entry.role.split('').slice(-10).join('') === ', Director'))
+	const titleDirector = titleCastAndCrewData.filter(entry => (entry.role === 'Director') || 
+													  		   (entry.role.includes('Director,') && !entry.role.includes('Assistant') && !entry.role.includes('Art Director')) || 
+													  		   (entry.role.split('').slice(-10).join('') === ', Director'))
 
 	console.log(titleDirector)
 	if (titleDetailsData.type === 'movie') {
-		document.getElementById('director').textContent = `dir. ${titleDirector.length === 1 ? titleDirector[0].full_name : `${titleDirector[0].full_name} & ${titleDirector[1].full_name}`}`
+		document.getElementById('director').textContent = `directed by ${titleDirector.length === 1 ? titleDirector[0].full_name : `${titleDirector[0].full_name} & ${titleDirector[1].full_name}`}`
 		document.getElementById('director').style.display = 'block'
+	} else {
+		document.getElementById('results-title').style.marginBottom = '2rem'
 	}
 	
 	
