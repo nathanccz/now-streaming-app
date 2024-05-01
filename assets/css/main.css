@@ -1041,6 +1041,7 @@ span[id|='name'] {
 
 .stream-sources span {
   padding-top: 1%;
+  font-size: .75rem;
 }
 
 .title-unavailable {
