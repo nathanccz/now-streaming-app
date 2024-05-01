@@ -98,6 +98,7 @@ body {
   -moz-justify-content: center;
   -webkit-justify-content: center;
   -ms-justify-content: center;
+
   justify-content: center;
   background-color: #000;
   padding: 6em 4em 4em 4em; }
@@ -1051,9 +1052,28 @@ span[id|='name'] {
   padding-left: 0;
   position: relative;
   margin-bottom: 0;
-  display: none;
-  line-height: 2rem;
+  visibility: hidden;
+  line-height: 1.5rem;
+  border: solid 2px rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  max-width: 400px;
+  min-height: 180px;
+  max-height: 180px;
+  padding: .5rem;
+  overflow: scroll;
+  cursor: pointer;
 }
+
+#title-suggestions li {
+  transition: background 0.25s;
+  border-radius: 2px;
+  margin: .5rem;
+}
+
+#title-suggestions li:hover {
+  background: rgb(231, 234, 236, .5);
+}
+
 
 
 /* Footer */

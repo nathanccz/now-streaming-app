@@ -171,7 +171,7 @@
 })()
 
 
-const API_KEY = 'H2saLikjgqyggPxWdtx8hw0bMYhiHBVJ0rmh7Snl'
+const API_KEY = 'JiTO286lijcc87cf3bukg5R6MnDHqCxhYCIXnRyn'
 
 //Form autocomplete functionality
 
@@ -190,21 +190,25 @@ autocomplete.oninput = async function () {
 		const suggestionsData = await suggestionsResponse.json()
 
 		suggestions = suggestionsData.results.filter((_,i) => i < 5)
-										     .map(entry => [`${entry.name} (${entry.year}) — <em>${entry.type.split('_').join(' ')}</em`, entry.id])
+										     .map(entry => [`${entry.name} (${entry.year}) — ${entry.type.split('_').join(' ')}`, entry.id])
 											 
-		resultsHTML.style.display = "block"
+		resultsHTML.style.visibility = "visible"
 
 		for (i = 0; i < suggestions.length; i++) {
 			resultsHTML.innerHTML += "<li>" + suggestions[i][0] + "</li>";
 		}
 
+	} else {
+		resultsHTML.style.visibility = 'hidden'
 	}
 }
 
 resultsHTML.onclick = function (event) {
 	const setValue = event.target.innerText.split('—')[0]
 	autocomplete.value = setValue
+	console.log(setValue)
 	this.innerHTML = ""
+	resultsHTML.style.visibility = 'hidden'
 }
 
 //Popup box exit functionality
@@ -241,8 +245,10 @@ async function getResults() {
 		[titleDetailsData.plot_overview, titleDetailsData.critic_score, titleDetailsData.poster, 
 		 titleDetailsData.similar_titles, titleDetailsData.trailer, titleDetailsData.title, titleDetailsData.year]
 	
-	const trailerID = trailerLink.split('=')[1]																					
-	
+	let trailerID
+	if (!trailerLink) document.querySelector('.trailer').style.visibility = 'hidden'	 
+		else trailerID = trailerLink.split('=')[1]																					
+	console.log(titleDetailsData)
 	
 	document.getElementById('poster').src = titlePoster
 	document.getElementById('plot-overview').textContent = titlePlot
@@ -254,11 +260,18 @@ async function getResults() {
 	const titleSourcesURL = `https://api.watchmode.com/v1/title/${titleID}/sources/?apiKey=${API_KEY}`
 	const titleSourcesResponse = await fetch(titleSourcesURL)	
 	const titleSourcesData = await titleSourcesResponse.json()	
-	// console.log(titleSourcesData)
+	console.log(titleSourcesData)
 	const subOrFree = titleSourcesData.filter(entry => entry.type === 'sub' || entry.type === 'free')
-	console.log(subOrFree)
+	let uniqueSources = new Set
+	const noDupes = subOrFree.filter((entry, ind, arr) => {
+						if (!uniqueSources.has(entry.source_id)) {
+							uniqueSources.add(entry.source_id)
+							return entry
+						}
+					})
+	console.log(noDupes)
 
-	if (subOrFree.length === 0) {
+	if (noDupes.length === 0) {
 		document.querySelector('.title-unavailable').style.display = 'block'
 		
 		// similarTitles.filter((_, ind) => ind < 5)
@@ -274,9 +287,10 @@ async function getResults() {
 	const streamSourcesResponse = await fetch(streamSourcesURL)
 	const streamSourcesData = await streamSourcesResponse.json()
 	console.log(streamSourcesData)
+	
 
-	//Add new li element for each entry in the subOrFree array		
-	subOrFree.forEach((entry, ind) => {
+	//Add new li element for each entry in the noDupes array		
+	noDupes.forEach((entry, ind) => {
 
 		const li = document.createElement('li')
 		li.classList.add(`streaming-service-${ind + 1}`)
@@ -306,7 +320,7 @@ async function getResults() {
 	})
 
 
-	////Fetch top four actors and plug headshot and name/role into popup////
+	////Fetch top 10 actors and plug headshot and name/role into popup////
 	const titleCastAndCrewURL = `https://api.watchmode.com/v1/title/${titleID}/cast-crew/?apiKey=${API_KEY}`
 	const titleCastAndCrewResponse = await fetch(titleCastAndCrewURL)
 	const titleCastAndCrewData = await titleCastAndCrewResponse.json()
@@ -328,13 +342,27 @@ async function getResults() {
 	const topCast = titleCastAll.filter((_, ind) => ind < 10)
 	console.log(titleCastAll)
 
-	topCast.forEach((entry,ind) => {
-		const headshot = document.getElementById(`headshot-${String(ind + 1)}`)
-		const name = document.getElementById(`name-${String(ind + 1)}`)
-		const role = document.getElementById(`role-${String(ind + 1)}`)
+	topCast.forEach((entry, ind) => {
+		const li = document.createElement('li')
+		li.classList.add(`actor-${ind + 1}`)
+
+		const headshot = document.createElement('img')
+		headshot.classList.add(`headshot-${ind + 1}`)
 		headshot.src = entry.headshot_url
-		name.textContent = entry.full_name
-		role.textContent = entry.role
+
+		const actorName = document.createElement('span')
+		actorName.classList.add(`name-${ind + 1}`)
+		actorName.textContent = entry.full_name
+		actorName.style.fontWeight = 'bold'
+
+		const actorRole = document.createElement('span')
+		actorRole.classList.add(`role-${ind + 1}`)
+		actorRole.textContent = entry.role
+
+		document.querySelector('.cast-list').appendChild(li)
+		document.querySelector(`.actor-${ind + 1}`).appendChild(headshot)
+		document.querySelector(`.actor-${ind + 1}`).appendChild(actorName)
+		document.querySelector(`.actor-${ind + 1}`).appendChild(actorRole)
 	})
 
 	////Set popup display to 'block'  on last line so that the data fetches have more time to resolve/populate before popup appears.//// 
