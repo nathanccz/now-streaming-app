@@ -1058,18 +1058,20 @@ span[id|='name'] {
   display: none;
 }
 
+/* Title Suggestions Autocomplete Box */
+
 #title-suggestions {
   list-style: none;
   padding-left: 0;
   position: relative;
   margin-bottom: 0;
   visibility: hidden;
-  line-height: 1.5rem;
+  line-height: 1rem;
   border: solid 2px rgba(255, 255, 255, 0.35);
   border-radius: 6px;
   max-width: 400px;
-  min-height: 180px;
-  max-height: 180px;
+  min-height: 240px;
+  max-height: 240px;
   padding: .5rem;
   overflow: scroll;
   cursor: pointer;
@@ -1078,7 +1080,15 @@ span[id|='name'] {
 #title-suggestions li {
   transition: background 0.25s;
   border-radius: 2px;
-  margin: .5rem;
+  height: 45px;
+  position: relative
+}
+
+#title-suggestions li span {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%)
 }
 
 #title-suggestions li:hover {

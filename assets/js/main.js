@@ -179,7 +179,7 @@ let suggestions
 const autocomplete = document.getElementById("title")
 const resultsHTML = document.getElementById("title-suggestions")
 
-autocomplete.oninput = async function () {
+autocomplete.oninput = async function() {
 	const userInput = this.value.split(' ').join('%20')
 	resultsHTML.innerHTML = ""
 
@@ -189,24 +189,20 @@ autocomplete.oninput = async function () {
 		const suggestionsResponse = await fetch(suggestionsURL)
 		const suggestionsData = await suggestionsResponse.json()
 
-		suggestions = suggestionsData.results.filter((_,i) => i < 5)
-										     .map(entry => [`${entry.name} (${entry.year}) — ${entry.type.split('_').join(' ')}`, entry.id])
+		suggestions = suggestionsData.results.map(entry => [`${entry.name} (${entry.year}) — ${entry.type.split('_').join(' ')}`, entry.id])
 											 
 		resultsHTML.style.visibility = "visible"
 
 		for (i = 0; i < suggestions.length; i++) {
-			resultsHTML.innerHTML += "<li>" + suggestions[i][0] + "</li>";
+			resultsHTML.innerHTML += "<li>" + "<span>" + suggestions[i][0] + "</span>" + "</li>";
 		}
 
-	} else {
-		resultsHTML.style.visibility = 'hidden'
-	}
+	} else resultsHTML.style.visibility = 'hidden'
 }
 
-resultsHTML.onclick = function (event) {
+resultsHTML.onclick = function(event) {
 	const setValue = event.target.innerText.split('—')[0]
 	autocomplete.value = setValue
-	console.log(setValue)
 	this.innerHTML = ""
 	resultsHTML.style.visibility = 'hidden'
 }
@@ -227,18 +223,18 @@ submitForm.addEventListener('submit', getResults)
 
 async function getResults() {
 
-	////Grab form submission data, match it to the suggestions array, and use the title ID it to fetch Watchmode API. If form field is blank, hard return////
+	////Grab form submission data, match it to the suggestions array, and use the title ID to fetch Watchmode API. If form field is blank, hard return
 	let formData = new FormData(submitForm)
 	const userInput = Object.fromEntries(formData).title
 	const titleID = suggestions.find(entry => entry[0].includes(userInput))[1]
 	if (!userInput) return
 
 
-	////Fetch title details and plug into popup////
+	////Fetch title details and plug into popup
 	const titleDetailsURL = `https://api.watchmode.com/v1/title/${titleID}/details/?apiKey=${API_KEY}`
 	const titleDetailsResponse = await fetch(titleDetailsURL)
 	const titleDetailsData = await titleDetailsResponse.json()
-	// console.log(titleDetailsData)
+	console.log(titleDetailsData)
 
 	const [titlePlot, titleScore, titlePoster, similarTitles, trailerLink, titleName, titleYear] = 
 	
@@ -256,22 +252,16 @@ async function getResults() {
 	document.getElementById('results-title').textContent = `${titleName} (${titleYear})`
 
 
-	//Streaming sources
+	////Streaming sources
 	const titleSourcesURL = `https://api.watchmode.com/v1/title/${titleID}/sources/?apiKey=${API_KEY}`
 	const titleSourcesResponse = await fetch(titleSourcesURL)	
 	const titleSourcesData = await titleSourcesResponse.json()	
 	console.log(titleSourcesData)
-	const subOrFree = titleSourcesData.filter(entry => entry.type === 'sub' || entry.type === 'free')
-	let uniqueSources = new Set
-	const noDupes = subOrFree.filter((entry, ind, arr) => {
-						if (!uniqueSources.has(entry.source_id)) {
-							uniqueSources.add(entry.source_id)
-							return entry
-						}
-					})
-	console.log(noDupes)
+	
+	const subOrFree = titleSourcesData.filter(entry => entry.region === 'US' && (entry.type === 'sub' || entry.type === 'free'))
+	console.log('sub or free', subOrFree)
 
-	if (noDupes.length === 0) {
+	if (subOrFree.length === 0) {
 		document.querySelector('.title-unavailable').style.display = 'block'
 		
 		// similarTitles.filter((_, ind) => ind < 5)
@@ -289,8 +279,8 @@ async function getResults() {
 	console.log(streamSourcesData)
 	
 
-	//Add new li element for each entry in the noDupes array		
-	noDupes.forEach((entry, ind) => {
+	////Add new li element for each entry in the noDupes array		
+	subOrFree.forEach((entry, ind) => {
 
 		const li = document.createElement('li')
 		li.classList.add(`streaming-service-${ind + 1}`)
@@ -320,23 +310,24 @@ async function getResults() {
 	})
 
 
-	////Fetch top 10 actors and plug headshot and name/role into popup////
+	////Fetch actors and plug headshot and name/role into popup
 	const titleCastAndCrewURL = `https://api.watchmode.com/v1/title/${titleID}/cast-crew/?apiKey=${API_KEY}`
 	const titleCastAndCrewResponse = await fetch(titleCastAndCrewURL)
 	const titleCastAndCrewData = await titleCastAndCrewResponse.json()
+	const titleCrewAll = titleCastAndCrewData.filter(entry => entry.type === 'Crew')
 	console.log(titleCastAndCrewData)
-	const titleDirector = titleCastAndCrewData.filter(entry => (entry.role === 'Director') || 
-													  		   (entry.role.includes('Director,') && !entry.role.includes('Assistant') && !entry.role.includes('Art Director')) || 
-													  		   (entry.role.split('').slice(-10).join('') === ', Director'))
 
-	console.log(titleDirector)
+	const titleDirector = titleCrewAll.filter(entry => (entry.role === 'Director') || 
+													   (entry.role.includes('Director,') && !entry.role.includes('Assistant') && !entry.role.includes('Art Director')) || 
+													   (entry.role.split('').slice(-10).join('') === ', Director'))
+
+	console.log('Title Director', titleDirector)
+
 	if (titleDetailsData.type === 'movie') {
 		document.getElementById('director').textContent = `directed by ${titleDirector.length === 1 ? titleDirector[0].full_name : `${titleDirector[0].full_name} & ${titleDirector[1].full_name}`}`
 		document.getElementById('director').style.display = 'block'
-	} else {
-		document.getElementById('results-title').style.marginBottom = '2rem'
-	}
-	
+	} else document.getElementById('results-title').style.marginBottom = '2rem'
+
 	
 	const titleCastAll = titleCastAndCrewData.filter(entry => entry.type === 'Cast')
 	const topCast = titleCastAll.filter((_, ind) => ind < 10)
