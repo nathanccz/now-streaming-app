@@ -170,8 +170,14 @@
 
 })()
 
+async function getIP() {
+	const response = await fetch('https://api.ipify.org?format=json')
+	const data = await response.json()
+	return data.ip
+}
 
 const API_KEY = 'JiTO286lijcc87cf3bukg5R6MnDHqCxhYCIXnRyn'
+const GEO_API = 'at_LsQLJfdm6NyebUsVrnOUV9OSbOrbc'
 
 //Form autocomplete functionality
 
@@ -257,8 +263,15 @@ async function getResults() {
 	const titleSourcesResponse = await fetch(titleSourcesURL)	
 	const titleSourcesData = await titleSourcesResponse.json()	
 	console.log(titleSourcesData)
-	
-	const subOrFree = titleSourcesData.filter(entry => entry.region === 'US' && (entry.type === 'sub' || entry.type === 'free'))
+
+	const userRegionURL = ` https://geo.ipify.org/api/v2/country?apiKey=${GEO_API}&ipAddress=${await getIP()}`
+	const userRegionResponse = await fetch(userRegionURL)
+	const userRegionData = await userRegionResponse.json()
+	const userRegion = userRegionData.location.country
+	console.log('region:', userRegion)
+
+
+	const subOrFree = titleSourcesData.filter(entry => entry.region === userRegion && (entry.type === 'sub' || entry.type === 'free'))
 	console.log('sub or free', subOrFree)
 
 	if (subOrFree.length === 0) {
